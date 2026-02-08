@@ -6,6 +6,6 @@ namespace WebApplication1.Repositories.Stats
 
     public interface IStatsRepo {
 
-        public RollStatsDto? GetStats(GetStatsQuery dto);
+        public Task<RollStatsDto?> GetStatsAsync(GetStatsQuery dto);
     }
 }

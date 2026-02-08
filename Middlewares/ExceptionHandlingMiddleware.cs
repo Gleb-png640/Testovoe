@@ -13,8 +13,14 @@
                 await _next(context);
             }
             catch (Exception ex) {
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
-                await context.Response.WriteAsync(ex.Message);
+                context.Response.ContentType = "application/json";
+
+                await context.Response.WriteAsJsonAsync(new
+                {
+                    error = ex.Message
+                });
             }
 
         }

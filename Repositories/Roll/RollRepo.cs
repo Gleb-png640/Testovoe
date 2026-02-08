@@ -1,4 +1,5 @@
-﻿using WebApplication1.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using WebApplication1.Data;
 using WebApplication1.Models.Dtos;
 using WebApplication1.Models.Entities;
 using WebApplication1.Models.Mapping;
@@ -19,7 +20,7 @@ namespace WebApplication1.Repositories.Roll
             }
         }
 
-        public IEnumerable<EntityRoll> GetPaged(GetRollQuery query)
+        public async Task<IEnumerable<EntityRoll>> GetPagedAsync(GetRollQuery query)
         {
 
             IQueryable<EntityRoll> rolls = ApplyFilters(query);
@@ -28,11 +29,11 @@ namespace WebApplication1.Repositories.Roll
             int page = query.Page;
             int pageSize = query.PageSize;
 
-            return rolls
+            return await rolls
                 .OrderBy(r => r.Id)
                 .Skip((page - pageOffset) * pageSize)
                 .Take(pageSize)
-                .ToList();
+                .ToListAsync();
         }
 
         private IQueryable<EntityRoll> ApplyFilters(GetRollQuery query)
@@ -64,26 +65,26 @@ namespace WebApplication1.Repositories.Roll
         }
 
 
-        public EntityRoll? FindById(long id)
+        public async Task<EntityRoll?> FindByIdAsync(long id)
         {
-            return _db.Rolls.Find(id);
+            return await _db.Rolls.FindAsync(id);
         }
 
 
-        public void Delete(EntityRoll roll)
+        public async Task DeleteAsync(EntityRoll roll)
         {
             roll.RemovedDate = DateTime.UtcNow;
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
         }
 
 
-        public EntityRoll Add(CreateDtoRoll dto)
+        public async Task<EntityRoll> AddAsync(CreateDtoRoll dto)
         {
 
             EntityRoll roll = dto.DtoToEntity();
 
             _db.Rolls.Add(roll);
-            _db.SaveChanges();
+            await _db.SaveChangesAsync();
 
             return roll;
         }

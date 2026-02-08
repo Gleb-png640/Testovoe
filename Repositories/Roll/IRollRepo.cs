@@ -6,12 +6,12 @@ namespace WebApplication1.Repositories.Roll
 {
     public interface IRollRepo
     {
-        public IEnumerable<EntityRoll> GetPaged(GetRollQuery query);
+        public Task<IEnumerable<EntityRoll>> GetPagedAsync(GetRollQuery query);
 
-        public EntityRoll Add(CreateDtoRoll dto);
+        public Task<EntityRoll> AddAsync(CreateDtoRoll dto);
 
-        public void Delete(EntityRoll roll);
+        public Task DeleteAsync(EntityRoll roll);
 
-        public EntityRoll? FindById(long id);
+        public Task<EntityRoll?> FindByIdAsync(long id);
     }
 }

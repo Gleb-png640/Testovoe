@@ -50,34 +50,34 @@ namespace WebApplication1.Repositories.Stats
             }
         }
 
-        public RollStatsDto? GetStats(GetStatsQuery dto) {
+        public async Task<RollStatsDto?> GetStatsAsync(GetStatsQuery dto) {
 
-            var statsQuery = FormStatsQuery(dto);
+            var statsQuery = await FormStatsQueryAsync(dto);
 
             if (statsQuery is null) { return null; }
 
 
             var stats = new RollStatsDto();
 
-            int receiptedCount = _db.Rolls.Count(r => r.ReceiptDate >= dto.PeriodStart && 
+            int receiptedCount = await _db.Rolls.CountAsync(r => r.ReceiptDate >= dto.PeriodStart && 
                                                     r.ReceiptDate <= dto.PeriodEnd);
             
             if (statsQuery.HasRemoved) {
-                var removedStats = FormRemovedStats(dto);
+                var removedStats = await FormRemovedStatsAsync(dto);
                 ApplyRemovedStats(stats, removedStats);
             }
 
             ApplyGeneralStats(stats, dto, statsQuery, receiptedCount);
 
-            var dailyExtremes = FormDailyExtremes(dto);
+            var dailyExtremes = await FormDailyExtremesAsync(dto);
             ApplyDailyExtremes(stats, dailyExtremes);
             return stats;
         }
 
 
-        private StatsQuery? FormStatsQuery(GetStatsQuery dto) {
+        private async Task<StatsQuery?> FormStatsQueryAsync(GetStatsQuery dto) {
 
-            var statsQuery = _db.Rolls
+            return await _db.Rolls
                     .Where(r => r.ReceiptDate <= dto.PeriodEnd &&
                             (r.RemovedDate == null || r.RemovedDate >= dto.PeriodStart))
                     .GroupBy(r => 1)
@@ -94,9 +94,7 @@ namespace WebApplication1.Repositories.Stats
                                             r.RemovedDate >= dto.PeriodStart &&
                                             r.RemovedDate <= dto.PeriodEnd)
                     })
-                    .FirstOrDefault();
-
-            return statsQuery;
+                    .FirstOrDefaultAsync();
         }
 
         private void ApplyGeneralStats(RollStatsDto stats, GetStatsQuery dto, StatsQuery statsQuery, int receiptedCount) {
@@ -112,8 +110,8 @@ namespace WebApplication1.Repositories.Stats
             stats.TotalWeight = (float)statsQuery.TotalWeight!;
         }
 
-        private RemovedStats FormRemovedStats( GetStatsQuery dto) {
-            RemovedStats removedStats = _db.Rolls
+        private async Task<RemovedStats> FormRemovedStatsAsync( GetStatsQuery dto) {
+            return await _db.Rolls
                         .Where(r => r.RemovedDate != null &&
                                    r.RemovedDate >= dto.PeriodStart &&
                                    r.RemovedDate <= dto.PeriodEnd)
@@ -123,9 +121,8 @@ namespace WebApplication1.Repositories.Stats
                             MinInterval = g.Min(r => (r.RemovedDate!.Value - r.ReceiptDate))!,
                             MaxInterval = g.Max(r => (r.RemovedDate!.Value - r.ReceiptDate))!
                         })
-                        .First();
+                        .FirstAsync();
 
-            return removedStats;
         }
 
         private void ApplyRemovedStats(RollStatsDto stats, RemovedStats removedStats) {       
@@ -136,7 +133,7 @@ namespace WebApplication1.Repositories.Stats
             stats.MaxInterval = removedStats.MaxInterval;
         }
 
-        private DailyExtremes FormDailyExtremes(GetStatsQuery dto) {
+        private async Task<DailyExtremes> FormDailyExtremesAsync(GetStatsQuery dto) {
 
             DailyExtremes result = new();
 
@@ -156,8 +153,8 @@ namespace WebApplication1.Repositories.Stats
                         (r.RemovedDate == null || r.RemovedDate > day)
                     );
 
-                int count = rollsAtDay.Count();
-                float weight = rollsAtDay.Sum(r => (float?)r.Weight) ?? 0;
+                int count = await rollsAtDay.CountAsync();
+                float weight = await rollsAtDay.SumAsync(r => (float?)r.Weight) ?? 0;
 
                 if (minRolls == null || count < minRolls) {
                     minRolls = count;

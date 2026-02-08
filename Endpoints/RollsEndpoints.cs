@@ -15,20 +15,21 @@ namespace WebApplication1.Endpoints
 
             var group = app.MapGroup("/rolls");
 
-            group.MapGet("/", ([AsParameters] GetRollQuery query, IRollRepo repo, IValidator<GetRollQuery> validator) =>
+            group.MapGet("/", async ([AsParameters] GetRollQuery query, IRollRepo repo, IValidator<GetRollQuery> validator) =>
             {
                 var results = validator.Validate(query);
                 if (!results.IsValid) { return Results.ValidationProblem(results.ToDictionary()); }
 
-                return Results.Ok(repo.GetPaged(query));
+                var rolls = await repo.GetPagedAsync(query);
+                return Results.Ok(rolls);
             });
 
 
-            group.MapGet("/stats", ([AsParameters] GetStatsQuery dto, IStatsRepo repo, IValidator<GetStatsQuery> validator) => {
+            group.MapGet("/stats", async ([AsParameters] GetStatsQuery dto, IStatsRepo repo, IValidator<GetStatsQuery> validator) => {
                 var results = validator.Validate(dto);
                 if (!results.IsValid) { return Results.ValidationProblem(results.ToDictionary()); }
 
-                RollStatsDto? stats = repo.GetStats(dto);
+                var stats = await repo.GetStatsAsync(dto);
                 
                 if (stats is null) { throw new Exception("В этот период на складе не было ни одного рулона"); } 
 
@@ -36,25 +37,25 @@ namespace WebApplication1.Endpoints
             });
 
 
-            group.MapPost("/", (IRollRepo repo, CreateDtoRoll dto, IValidator<CreateDtoRoll> validator) =>
+            group.MapPost("/", async (IRollRepo repo, CreateDtoRoll dto, IValidator<CreateDtoRoll> validator) =>
             {
                 var results = validator.Validate(dto);
                 if (!results.IsValid) { return Results.ValidationProblem(results.ToDictionary()); }
 
-                EntityRoll roll = repo.Add(dto);
+                var roll = await repo.AddAsync(dto);
 
                 return Results.Created($"/rolls/{roll.Id}", roll);
             });
 
 
-            group.MapDelete("/{id}", (IRollRepo repo, long id) =>
+            group.MapDelete("/{id}", async (IRollRepo repo, long id) =>
             {
-                var roll = repo.FindById(id);
+                var roll = await repo.FindByIdAsync(id);
 
                 if (roll is null) { throw new Exception("Рулон не найден"); }
 
                 if (roll.RemovedDate.HasValue) { throw new Exception("Рулон уже удален"); }
-                repo.Delete(roll);
+                await repo.DeleteAsync(roll);
 
                 return Results.Ok(roll);
             });
