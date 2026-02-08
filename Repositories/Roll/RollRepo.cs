@@ -11,7 +11,13 @@ namespace WebApplication1.Repositories.Roll
 
         private SeverstalDbContext _db;
 
-        public RollRepo(SeverstalDbContext dbContext) => _db = dbContext;
+        public RollRepo(SeverstalDbContext dbContext) {
+            _db = dbContext;
+
+            if (!_db.Database.CanConnect()) {
+                throw new Exception("Не удалось подключиться к БД");
+            }
+        }
 
         public IEnumerable<EntityRoll> GetPaged(GetRollQuery query)
         {

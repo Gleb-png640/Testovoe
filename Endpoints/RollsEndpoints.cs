@@ -29,8 +29,8 @@ namespace WebApplication1.Endpoints
                 if (!results.IsValid) { return Results.ValidationProblem(results.ToDictionary()); }
 
                 RollStatsDto? stats = repo.GetStats(dto);
-
-                if (stats is null) { return Results.Ok("В этот период на складе не было ни одного рулона"); } // Не забыть выкинуть ошибку
+                
+                if (stats is null) { throw new Exception("В этот период на складе не было ни одного рулона"); } 
 
                 return Results.Ok(stats);
             });
@@ -51,9 +51,9 @@ namespace WebApplication1.Endpoints
             {
                 var roll = repo.FindById(id);
 
-                if (roll is null) { return Results.NotFound(); }
+                if (roll is null) { throw new Exception("Рулон не найден"); }
 
-                if (roll.RemovedDate.HasValue) { return Results.Ok("Рулон уже удален"); } // Не забыть сделать выброс ошибки
+                if (roll.RemovedDate.HasValue) { throw new Exception("Рулон уже удален"); }
                 repo.Delete(roll);
 
                 return Results.Ok(roll);

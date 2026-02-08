@@ -3,6 +3,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
 using WebApplication1.Endpoints;
+using WebApplication1.Middlewares;
 using WebApplication1.Models.Dtos;
 using WebApplication1.QueryParameters;
 using WebApplication1.Repositories.Roll;
@@ -36,6 +37,8 @@ namespace WebApplication1
             });
 
             var app = builder.Build();
+
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment()) {

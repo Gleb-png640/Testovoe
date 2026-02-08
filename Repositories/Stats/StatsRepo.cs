@@ -41,8 +41,14 @@ namespace WebApplication1.Repositories.Stats
     public class StatsRepo : IStatsRepo {
 
         private SeverstalDbContext _db;
-        public StatsRepo(SeverstalDbContext dbContext) => _db = dbContext;
 
+        public StatsRepo(SeverstalDbContext dbContext) {
+            _db = dbContext;
+
+            if (!_db.Database.CanConnect()) {
+                throw new Exception("Не удалось подключиться к БД");
+            }
+        }
 
         public RollStatsDto? GetStats(GetStatsQuery dto) {
 
